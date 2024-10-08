@@ -85,10 +85,12 @@
                     return;
                 }
 
+                // Update the countdown message
                 document.getElementById("countdown").innerText = `The train is returning to the station in ${countdown} seconds.`;
 
+                // Decrease countdown by 1 second
                 countdown--;
-            }, 1000);
+            }, 1000); // Update every 1000 milliseconds (1 second)
         }
 
         document.getElementById("boardTrainButton").onclick = boardTrain;
