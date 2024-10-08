@@ -41,12 +41,13 @@
             const signer = await provider.getSigner();
             const contractAddress = "0x0498B7c793D7432Cd9dB27fb02fc9cfdBAfA1Fd3";
 
-            // Logic to buy a ticket (placeholder)
+            // Placeholder for buying a ticket logic
             console.log("Buying ticket...");
-            // Call contract method here
 
+            // Set ticket status
             hasTicket = true;
             localStorage.setItem('lastTicketDate', new Date().toDateString());
+            localStorage.setItem('hasTicket', 'true');
             document.getElementById("buyTicketButton").style.display = "none";
             alert("You have claimed your ticket! You can board the train now.");
         }
