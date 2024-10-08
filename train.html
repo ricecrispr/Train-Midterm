@@ -53,13 +53,23 @@
 
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
+            const contractAddress = "0x38cB7800C3Fddb8dda074C1c650A155154924C73";
+            const contract = new ethers.Contract(contractAddress, [
+                // ABI goes here (simplified for this example)
+                "function boardTrain() public"
+            ], signer);
 
-            // Placeholder for boarding the train logic
-            console.log("Boarding train...");
-            // Call your smart contract method here
+            try {
+                // Call your smart contract method here
+                const tx = await contract.boardTrain();
+                await tx.wait();
+                console.log("Boarding train...");
 
-            document.getElementById("boardTrainButton").disabled = true;
-            startTrainDeparture();
+                document.getElementById("boardTrainButton").disabled = true;
+                startTrainDeparture();
+            } catch (error) {
+                console.error("Error boarding train:", error);
+            }
         }
 
         function startTrainDeparture() {
