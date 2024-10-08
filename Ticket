@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Booth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #buyTicketButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        #buyTicketButton:after {
+            content: " ";
+            position: absolute;
+            background: white;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.3s;
+            z-index: 0;
+        }
+        #buyTicketButton:hover:after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        #buyTicketButton span {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ticket Booth</h1>
+    <button id="buyTicketButton"><span>Buy Ticket</span></button>
+
+    <script>
+        async function buyTicket() {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contractAddress = "0x0498B7c793D7432Cd9dB27fb02fc9cfdBAfA1Fd3";
+
+            // Logic to buy a ticket (placeholder)
+            console.log("Buying ticket...");
+            // Call contract method here
+
+            alert("You are now eligible to board the train!");
+        }
+
+        document.getElementById("buyTicketButton").onclick = buyTicket;
+    </script>
+</body>
+</html>

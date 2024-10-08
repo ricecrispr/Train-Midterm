@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('initial_train_station.jpg'); /* Initial train station image */
+            background-size: cover;
+            position: relative;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        #boardTrainButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Train Platform</h1>
+    <button id="boardTrainButton">Board Train</button>
+
+    <script>
+        let passengers = 0;
+        const contractAddress = "0x38cB7800C3Fddb8dda074C1c650A155154924C73";
+        let trainLeaving = false;
+
+        async function boardTrain() {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+
+            // Logic to board the train (placeholder)
+            passengers++;
+            console.log("Boarding train, current passengers:", passengers);
+
+            if (passengers >= 8 && !trainLeaving) {
+                trainLeaving = true;
+                alert("Train is leaving! Buckle up!");
+                startTrainDeparture();
+            }
+        }
+
+        function startTrainDeparture() {
+            setTimeout(() => {
+                document.body.style.backgroundImage = "none"; // Background goes blank
+                setTimeout(() => {
+                    document.body.style.backgroundImage = "url('new_train_station.jpg')"; // New station image
+                    passengers = 0; // Reset passengers after the train returns
+                    trainLeaving = false;
+                    alert("The train has returned to a new station!");
+                }, 300000); // 5 minutes
+            }, 1000); // 1 second delay for effect
+        }
+
+        document.getElementById("boardTrainButton").onclick = boardTrain;
+    </script>
+</body>
+</html>
