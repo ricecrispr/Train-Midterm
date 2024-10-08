@@ -55,12 +55,11 @@
             const signer = await provider.getSigner();
             const contractAddress = "0x38cB7800C3Fddb8dda074C1c650A155154924C73";
             const contract = new ethers.Contract(contractAddress, [
-                // ABI goes here (replace with actual ABI)
+                // Replace with your contract's ABI
                 "function boardTrain() public"
             ], signer);
 
             try {
-                // Call your smart contract method here
                 const tx = await contract.boardTrain();
                 await tx.wait();
                 console.log("Boarding train...");
@@ -82,7 +81,7 @@
                     alert("The train has returned to the station!");
                     document.getElementById("countdown").style.display = "none";
                     document.getElementById("boardTrainButton").disabled = false;
-                    localStorage.removeItem('hasTicket'); // Reset ticket status
+                    localStorage.removeItem('hasTicket'); // Reset ticket status for the next day
                     return;
                 }
                 document.getElementById("countdown").innerText = `Train leaving in ${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`;
