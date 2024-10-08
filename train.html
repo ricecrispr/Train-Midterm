@@ -85,11 +85,7 @@
                     return;
                 }
 
-                if (countdown <= 60) {
-                    document.getElementById("countdown").innerText = `The train is returning to the station in ${countdown} seconds.`;
-                } else {
-                    document.getElementById("countdown").innerText = `Train leaving in ${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`;
-                }
+                document.getElementById("countdown").innerText = `The train is returning to the station in ${countdown} seconds.`;
 
                 countdown--;
             }, 1000);
