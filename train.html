@@ -78,7 +78,7 @@
             const interval = setInterval(() => {
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    alert("The train has returned to the station!");
+                    alert("The train is returning to the station!");
                     document.getElementById("countdown").style.display = "none";
                     document.getElementById("boardTrainButton").disabled = false;
                     localStorage.removeItem('hasTicket'); // Reset ticket status for the next day
