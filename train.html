@@ -78,13 +78,19 @@
             const interval = setInterval(() => {
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    alert("The train is returning to the station!");
+                    alert("The train has returned to the station!");
                     document.getElementById("countdown").style.display = "none";
                     document.getElementById("boardTrainButton").disabled = false;
                     localStorage.removeItem('hasTicket'); // Reset ticket status for the next day
                     return;
                 }
-                document.getElementById("countdown").innerText = `Train leaving in ${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`;
+
+                if (countdown <= 60) {
+                    document.getElementById("countdown").innerText = `The train is returning to the station in ${countdown} seconds.`;
+                } else {
+                    document.getElementById("countdown").innerText = `Train leaving in ${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`;
+                }
+
                 countdown--;
             }, 1000);
         }
