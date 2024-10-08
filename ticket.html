@@ -30,11 +30,10 @@
 </head>
 <body>
     <h1>Ticket Booth</h1>
-    <button id="buyTicketButton">Buy Ticket</button>
+    <button id="buyTicketButton">BUY TICKET</button>
 
     <script>
-        let hasTicket = false;
-        const lastTicketDate = localStorage.getItem('lastTicketDate');
+        let hasTicket = localStorage.getItem('hasTicket') === 'true';
 
         async function buyTicket() {
             const provider = new ethers.BrowserProvider(window.ethereum);
@@ -43,17 +42,17 @@
 
             // Placeholder for buying a ticket logic
             console.log("Buying ticket...");
+            // Call your smart contract method here
 
             // Set ticket status
             hasTicket = true;
-            localStorage.setItem('lastTicketDate', new Date().toDateString());
             localStorage.setItem('hasTicket', 'true');
             document.getElementById("buyTicketButton").style.display = "none";
-            alert("You have claimed your ticket! You can board the train now.");
+            alert("You have claimed your ticket! You can now board the train.");
         }
 
-        // Check if the user can buy a ticket
-        if (hasTicket || (lastTicketDate && new Date().toDateString() === lastTicketDate)) {
+        // Hide the button if the user already has a ticket
+        if (hasTicket) {
             document.getElementById("buyTicketButton").style.display = "none";
         }
 

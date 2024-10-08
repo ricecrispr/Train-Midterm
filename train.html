@@ -11,7 +11,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-image: url('initial_train_station.jpg'); /* Replace with actual image */
+            background-image: url('initial_train_station.jpg'); /* Replace with your image */
             background-size: cover;
             position: relative;
         }
@@ -44,7 +44,6 @@
 
     <script>
         let hasTicket = localStorage.getItem('hasTicket') === 'true';
-        let trainLeaving = false;
 
         async function boardTrain() {
             if (!hasTicket) {
@@ -57,6 +56,7 @@
 
             // Placeholder for boarding the train logic
             console.log("Boarding train...");
+            // Call your smart contract method here
 
             document.getElementById("boardTrainButton").disabled = true;
             startTrainDeparture();
