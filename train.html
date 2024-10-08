@@ -53,7 +53,7 @@
 
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contractAddress = "0x38cB7800C3Fddb8dda074C1c650A155154924C73";
+            const contractAddress = "0xA5e832C4aD3bC0677Fe1a062C3e3f62ED8CC3095";
             const contract = new ethers.Contract(contractAddress, [
                 // Replace with your contract's ABI
                 "function boardTrain() public"

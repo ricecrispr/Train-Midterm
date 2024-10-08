@@ -17,7 +17,7 @@
         h1 {
             margin-bottom: 20px;
         }
-        #buyTicketButton {
+        #claimTicketButton {
             padding: 15px 30px;
             font-size: 18px;
             background-color: #4CAF50;
@@ -30,29 +30,29 @@
 </head>
 <body>
     <h1>Ticket Booth!</h1>
-    <button id="buyTicketButton">BUY TICKET</button>
+    <button id="claimTicketButton">BUY TICKET</button>
 
     <script>
         let hasTicket = localStorage.getItem('hasTicket') === 'true';
 
-        async function buyTicket() {
+        async function claimTicket() {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contractAddress = "0x0498B7c793D7432Cd9dB27fb02fc9cfdBAfA1Fd3";
+            const contractAddress = "0xef05673DA615ff5809E6f57AFE6eBB1A9ceDd9de";
             const contract = new ethers.Contract(contractAddress, [
                 // Replace with your contract's ABI
-                "function buyTicket() public"
+                "function claimTicket() public"
             ], signer);
 
             try {
-                const tx = await contract.buyTicket();
+                const tx = await contract.claimTicket();
                 await tx.wait();
                 console.log("Ticket purchased!");
 
                 // Update local storage and button visibility
                 hasTicket = true;
                 localStorage.setItem('hasTicket', 'true');
-                document.getElementById("buyTicketButton").style.display = "none";
+                document.getElementById("claimTicketButton").style.display = "none";
                 alert("You have claimed your ticket! You can now board the train.");
             } catch (error) {
                 console.error("Error purchasing ticket:", error);
@@ -61,11 +61,11 @@
 
         // Hide the button if the user already has a ticket
         if (hasTicket) {
-            document.getElementById("buyTicketButton").style.display = "none";
+            document.getElementById("claimTicketButton").style.display = "none";
             alert("You already have a ticket for today.");
         }
 
-        document.getElementById("buyTicketButton").onclick = buyTicket;
+        document.getElementById("claimTicketButton").onclick = claimTicket;
     </script>
 </body>
 </html>
