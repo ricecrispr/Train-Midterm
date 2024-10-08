@@ -29,46 +29,58 @@
             border-radius: 12px;
             cursor: pointer;
         }
+        #countdown {
+            margin-top: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
     </style>
 </head>
 <body>
     <h1>Train Platform</h1>
     <button id="boardTrainButton">Board Train</button>
+    <div id="countdown" style="display: none;"></div>
 
     <script>
-        let passengers = 0;
-        const contractAddress = "0x38cB7800C3Fddb8dda074C1c650A155154924C73";
+        let hasTicket = localStorage.getItem('hasTicket') === 'true';
         let trainLeaving = false;
 
         async function boardTrain() {
+            if (!hasTicket) {
+                alert("You need a ticket to board the train!");
+                return;
+            }
+
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
 
             // Logic to board the train (placeholder)
-            passengers++;
-            console.log("Boarding train, current passengers:", passengers);
+            console.log("Boarding train...");
 
-            if (passengers >= 8 && !trainLeaving) {
-                trainLeaving = true;
-                alert("Train is leaving! Buckle up!");
-                startTrainDeparture();
-            }
+            document.getElementById("boardTrainButton").disabled = true;
+            startTrainDeparture();
         }
 
         function startTrainDeparture() {
-            setTimeout(() => {
-                document.body.style.backgroundImage = "none"; // Background goes blank
-                setTimeout(() => {
-                    document.body.style.backgroundImage = "url('new_train_station.jpg')"; // New station image
-                    passengers = 0; // Reset passengers after the train returns
-                    trainLeaving = false;
-                    alert("The train has returned to a new station!");
-                }, 300000); // 5 minutes
-            }, 1000); // 1 second delay for effect
+            let countdown = 300; // 5 minutes in seconds
+            document.getElementById("countdown").style.display = "block";
+
+            const interval = setInterval(() => {
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    alert("The train has returned to the station!");
+                    document.getElementById("countdown").style.display = "none";
+                    document.getElementById("boardTrainButton").disabled = false;
+                    localStorage.removeItem('hasTicket'); // Reset ticket status
+                    return;
+                }
+                document.getElementById("countdown").innerText = `Train leaving in ${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`;
+                countdown--;
+            }, 1000);
         }
 
         document.getElementById("boardTrainButton").onclick = boardTrain;
     </script>
 </body>
 </html>
-

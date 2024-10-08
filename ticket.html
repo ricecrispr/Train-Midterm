@@ -25,36 +25,17 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        #buyTicketButton:after {
-            content: " ";
-            position: absolute;
-            background: white;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            border-radius: 12px;
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.3s;
-            z-index: 0;
-        }
-        #buyTicketButton:hover:after {
-            transform: translate(-50%, -50%) scale(1);
-        }
-        #buyTicketButton span {
-            position: relative;
-            z-index: 1;
         }
     </style>
 </head>
 <body>
     <h1>Ticket Booth</h1>
-    <button id="buyTicketButton"><span>Buy Ticket</span></button>
+    <button id="buyTicketButton">Buy Ticket</button>
 
     <script>
+        let hasTicket = false;
+        const lastTicketDate = localStorage.getItem('lastTicketDate');
+
         async function buyTicket() {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
@@ -64,7 +45,15 @@
             console.log("Buying ticket...");
             // Call contract method here
 
-            alert("You are now eligible to board the train!");
+            hasTicket = true;
+            localStorage.setItem('lastTicketDate', new Date().toDateString());
+            document.getElementById("buyTicketButton").style.display = "none";
+            alert("You have claimed your ticket! You can board the train now.");
+        }
+
+        // Check if the user can buy a ticket
+        if (hasTicket || (lastTicketDate && new Date().toDateString() === lastTicketDate)) {
+            document.getElementById("buyTicketButton").style.display = "none";
         }
 
         document.getElementById("buyTicketButton").onclick = buyTicket;
