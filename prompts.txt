@@ -1,0 +1,476 @@
+There are two smart contracts, train.sol and ticket.sol that interact with each other.
+
+Here's the code for train.sol:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+
+import "./Ticket.sol";
+
+
+contract Train {
+   Ticket public ticketContract;
+   uint public boardingCount = 0;
+   uint public lastDepartureTime = 0;
+   uint public constant BOARDING_LIMIT = 3;
+   uint public constant TRAIN_RETURN_TIME = 5 minutes; // Cooldown for train to return after departure
+
+
+   mapping(address => uint) public lastBoardingTime;
+   address[] public passengers;
+
+
+   // Event to notify that the train has left
+   event TrainLeft(address[] passengers, uint timestamp);
+   // Event to notify that a user boarded the train
+   event UserBoarded(address indexed user);
+
+
+   constructor(address _ticketContractAddress) {
+       ticketContract = Ticket(_ticketContractAddress);
+   }
+
+
+   // Check how many users have boarded
+   function checkHowManyBoarded() public view returns (uint256) {
+       return passengers.length;
+   }
+
+
+   // Board the train if the user has a ticket and the train is not in cooldown period
+   function boardTrain() public {
+       // Ensure the train has returned (enough time has passed since the last departure)
+       require(
+           block.timestamp >= lastDepartureTime + TRAIN_RETURN_TIME,
+           "Train is not available, it hasn't returned to the station."
+       );
+
+
+       require(ticketContract.checkTicket(msg.sender), "You need a ticket to board.");
+       require(passengers.length < BOARDING_LIMIT, "The train is full.");
+
+
+       // Use the ticket and add the user to the passengers list
+       ticketContract.useTicket(msg.sender);
+       lastBoardingTime[msg.sender] = block.timestamp;
+       passengers.push(msg.sender);
+       emit UserBoarded(msg.sender);
+
+
+       // Check if the train is full and should leave
+       if (passengers.length == BOARDING_LIMIT) {
+           leaveStation();
+       }
+   }
+
+
+   // Internal function for the train to leave the station
+   function leaveStation() internal {
+       emit TrainLeft(passengers, block.timestamp);
+       lastDepartureTime = block.timestamp;
+       boardingCount++;
+
+
+       for(uint8 i = 0; i < passengers.length; i++) {
+           ticketContract.unboardUser(passengers[i]);
+       }
+
+
+       // Reset the passengers for the next trip
+       delete passengers;
+   }
+
+
+   // Function to check if the train is available for boarding
+   function isTrainAvailable() public view returns (bool) {
+       // Returns true if the cooldown period for the train's return has passed
+       return block.timestamp >= lastDepartureTime + TRAIN_RETURN_TIME;
+   }
+}
+
+
+here's the code for ticket.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+
+contract Ticket {
+   mapping(address => bool) public hasTicket;
+   mapping(address => bool) public hasBoarded;
+
+
+   // Event to notify that a ticket was claimed
+   event TicketClaimed(address indexed user);
+   // Event to notify that a ticket was used
+   event TicketUsed(address indexed user);
+
+
+   // Claim a ticket if the user doesn't already have one
+   function claimTicket() public {
+       require(!hasTicket[msg.sender], "You already have a ticket.");
+       require(!hasBoarded[msg.sender], "You already boarded.");
+       hasTicket[msg.sender] = true;
+       emit TicketClaimed(msg.sender);
+   }
+
+
+   // Use the ticket if the user has one
+   function useTicket(address user) external {
+       require(hasTicket[user], "User does not have a ticket.");
+       require(!hasBoarded[user], "User has already boarded.");
+       hasTicket[user] = false;
+       hasBoarded[user] = true;
+       emit TicketUsed(user);
+   }
+
+
+   // unboard the user
+   function unboardUser(address user) external {
+       hasBoarded[user] = false;
+   }
+
+
+   // Check if a user has a ticket
+   function checkTicket(address user) external view returns (bool) {
+       return hasTicket[user];
+   }
+}
+
+
+
+create a page called train.html that does the following
+
+Specifications for the page:
+Use ethers.js v6.7. Import the library from this src: https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js
+When initializing the provider, do the following: provider = new ethers.BrowserProvider(window.ethereum);
+When initializing the signer, do the following: signer = await provider.getSigner();
+
+
+Here's an overview of the state changes of the train.html page.
+
+Train.html
+  visitor loads train.html...
+    if train is in station
+      show train in station
+    if train has left station
+      if user boarded
+        randomly show either eth/rainbow scenery slideshow
+      if user not boarded
+        show empty train station
+      if 5 minutes
+        train returns to station
+
+
+- check the smart contract to see if the train has left
+- if it is in the station, show a random image of the train in the station (there are 4 images to choose from)
+   - here's the filepath to the train-in station-images: images/trainstation/TrainArrived/scene1.png
+- if it has left and the user has NOT boarded, show a random image of the train departed (there are 2 images to choose from)
+   - - here's the filepath to the train-in station-images: images/trainstation/TrainDeparted/scene1.png
+- if it has left AND the user has boarded (you can check the smart contract to see if they boarded), display random scenery.
+- to display random scenery, select a random scenery (scenery1 vs scenery2) and change the background image of the page every 10 seconds (based on the time the train left as it was stored in the smart contract).
+   - each scenery has 8 images (scene1.png to scene8.png)
+   - here's a filepath for one of the scenery image folders: images/trainbackgrounds/scenery1/
+- if 5 minutes have elapsed since the train left, return the train to the station.
+
+
+const TRAIN_CONTRACT_ADDRESS = "0xD0cE59916E3e98b548bbb00c246AA6BCba6269f4";
+        const TICKET_CONTRACT_ADDRESS = "0x6619A780dE40DbefA62C86e12c18C65aD82b6F50";
+        const TRAIN_ABI = [
+	{
+		"inputs": [],
+		"name": "boardTrain",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_ticketContractAddress",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address[]",
+				"name": "passengers",
+				"type": "address[]"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "TrainLeft",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "UserBoarded",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "BOARDING_LIMIT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "boardingCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkHowManyBoarded",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "isTrainAvailable",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "lastBoardingTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "lastDepartureTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "passengers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "ticketContract",
+		"outputs": [
+			{
+				"internalType": "contract Ticket",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "TRAIN_RETURN_TIME",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+        const TICKET_ABI = [
+	{
+		"inputs": [],
+		"name": "claimTicket",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "TicketClaimed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "TicketUsed",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "unboardUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "useTicket",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "checkTicket",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasBoarded",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasTicket",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];

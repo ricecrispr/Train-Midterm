@@ -3,97 +3,491 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Train Platform</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <title>Train Station</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-image: url('images/trainbackgrounds'); /* Replace with your image */
             background-size: cover;
-            position: relative;
+            background-repeat: no-repeat;
+            transition: background-image 1s ease-in-out;
         }
-        h1 {
-            margin-bottom: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        #message {
+            font-size: 2em;
+            text-align: center;
+            margin-top: 20%;
         }
-        #boardTrainButton {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 12px;
+        #buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin: 5px;
             cursor: pointer;
         }
-        #countdown {
-            margin-top: 20px;
-            color: white;
-            font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 </head>
 <body>
-    <h1>Train Platform</h1>
-    <button id="boardTrainButton">Board Train</button>
-    <div id="countdown" style="display: none;"></div>
+    <div id="message">Loading train status...</div>
+    <div id="buttons">
+        <button id="claimTicketBtn" onclick="claimTicket()">Claim Ticket</button>
+        <button id="boardTrainBtn" onclick="boardTrain()">Board Train</button>
+    </div>
 
     <script>
-        let hasTicket = localStorage.getItem('hasTicket') === 'true';
+        
+const TRAIN_CONTRACT_ADDRESS = "0x244da7f54767c4049cd17e4975E83b95847963DE";
+        const TICKET_CONTRACT_ADDRESS = "0xF73d48A8601552054DF7da3738FF16fEB8701348";
+        const TRAIN_ABI = [
+	{
+		"inputs": [],
+		"name": "boardTrain",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_ticketContractAddress",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address[]",
+				"name": "passengers",
+				"type": "address[]"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "TrainLeft",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "UserBoarded",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "BOARDING_LIMIT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "boardingCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkHowManyBoarded",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "isTrainAvailable",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "lastBoardingTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "lastDepartureTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "passengers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "ticketContract",
+		"outputs": [
+			{
+				"internalType": "contract Ticket",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "TRAIN_RETURN_TIME",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+        const TICKET_ABI = [
+	{
+		"inputs": [],
+		"name": "claimTicket",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "TicketClaimed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "TicketUsed",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "unboardUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "useTicket",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "checkTicket",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasBoarded",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasTicket",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
 
-        async function boardTrain() {
-            if (!hasTicket) {
-                alert("You need a ticket to board the train!");
-                return;
-            }
+        const trainImages = [
+            'images/trainstation/TrainArrived/scene1.png',
+            'images/trainstation/TrainArrived/scene2.png',
+            'images/trainstation/TrainArrived/scene3.png',
+            'images/trainstation/TrainArrived/scene4.png'
+        ];
+        const departedImages = [
+            'images/trainstation/TrainDeparted/scene1.png',
+            'images/trainstation/TrainDeparted/scene2.png'
+        ];
+        const scenery1 = [
+            'images/trainbackgrounds/scenery1/scene1.png',
+            'images/trainbackgrounds/scenery1/scene2.png',
+            'images/trainbackgrounds/scenery1/scene3.png',
+            'images/trainbackgrounds/scenery1/scene4.png',
+            'images/trainbackgrounds/scenery1/scene5.png',
+            'images/trainbackgrounds/scenery1/scene6.png',
+            'images/trainbackgrounds/scenery1/scene7.png',
+            'images/trainbackgrounds/scenery1/scene8.png'
+        ];
+        const scenery2 = [
+            'images/trainbackgrounds/scenery2/scene1.png',
+            'images/trainbackgrounds/scenery2/scene2.png',
+            'images/trainbackgrounds/scenery2/scene3.png',
+            'images/trainbackgrounds/scenery2/scene4.png',
+            'images/trainbackgrounds/scenery2/scene5.png',
+            'images/trainbackgrounds/scenery2/scene6.png',
+            'images/trainbackgrounds/scenery2/scene7.png',
+            'images/trainbackgrounds/scenery2/scene8.png'
+        ];
 
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const contractAddress = "0xA5e832C4aD3bC0677Fe1a062C3e3f62ED8CC3095";
-            const contract = new ethers.Contract(contractAddress, [
-                // Replace with your contract's ABI
-                "function boardTrain() public"
-            ], signer);
+        let provider, signer, trainContract, ticketContract;
 
+        async function initContracts() {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+
+            trainContract = new ethers.Contract(TRAIN_CONTRACT_ADDRESS, TRAIN_ABI, signer);
+            ticketContract = new ethers.Contract(TICKET_CONTRACT_ADDRESS, TICKET_ABI, signer);
+
+            checkTrainStatus();
+        }
+
+        // Check train status and decide what to display
+        async function checkTrainStatus() {
             try {
-                const tx = await contract.boardTrain();
-                await tx.wait();
-                console.log("Boarding train...");
+                const isTrainAvailable = await trainContract.isTrainAvailable();
+                const hasBoarded = await ticketContract.hasBoarded(await signer.getAddress());
+                let lastDepartureTime = await trainContract.lastDepartureTime();
 
-                document.getElementById("boardTrainButton").disabled = true;
-                startTrainDeparture();
+                lastDepartureTime = Number(lastDepartureTime);
+
+                if (isTrainAvailable) {
+                    // Train is in the station
+                    showRandomImage(trainImages);
+                    document.getElementById('message').textContent = "Train is in the station. Board now!";
+                } else {
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    if (currentTime - lastDepartureTime < 5 * 60) {
+                        if (hasBoarded) {
+                            startScenerySlideshow(lastDepartureTime);
+                        } else {
+                            showRandomImage(departedImages);
+                            document.getElementById('message').textContent = "Train has left the station.";
+                        }
+                    } else {
+                        // 5 minutes have passed, the train is back
+                        showRandomImage(trainImages);
+                        document.getElementById('message').textContent = "Train is back at the station.";
+                    }
+                }
             } catch (error) {
-                console.error("Error boarding train:", error);
+                console.error("Error checking train status: ", error);
             }
         }
 
-        function startTrainDeparture() {
-            let countdown = 300; // 5 minutes in seconds
-            document.getElementById("countdown").style.display = "block";
+        // Show a random image from a provided list
+        function showRandomImage(images) {
+            const randomIndex = Math.floor(Math.random() * images.length);
+            document.body.style.backgroundImage = `url('${images[randomIndex]}')`;
+        }
 
-            const interval = setInterval(() => {
-                if (countdown <= 0) {
-                    clearInterval(interval);
-                    alert("The train has returned to the station!");
-                    document.getElementById("countdown").style.display = "none";
-                    document.getElementById("boardTrainButton").disabled = false;
-                    localStorage.removeItem('hasTicket'); // Reset ticket status for the next day
+        // Start slideshow for scenery
+        function startScenerySlideshow(lastDepartureTime) {
+            const scenery = Math.random() > 0.5 ? scenery1 : scenery2;
+            let currentSceneIndex = 0;
+
+            function updateScenery() {
+                document.body.style.backgroundImage = `url('${scenery[currentSceneIndex]}')`;
+                currentSceneIndex = (currentSceneIndex + 1) % scenery.length;
+            }
+
+            // Calculate remaining time and set interval for slideshow
+            const currentTime = Math.floor(Date.now() / 1000);
+            const elapsedTime = currentTime - lastDepartureTime;
+            const remainingTime = Math.max(5 * 60 - elapsedTime, 0);
+
+            updateScenery();
+            setInterval(updateScenery, 10000);
+
+            setTimeout(() => {
+                document.getElementById('message').textContent = "Train has returned to the station.";
+                showRandomImage(trainImages);
+            }, remainingTime * 1000);
+        }
+
+        // Claim a ticket
+        async function claimTicket() {
+            try {
+                const hasTicket = await ticketContract.hasTicket(await signer.getAddress());
+                if (hasTicket) {
+                    alert("You already have a ticket.");
                     return;
                 }
 
-                // Update the countdown message
-                document.getElementById("countdown").innerText = `The train is returning to the station in ${countdown} seconds.`;
-
-                // Decrease countdown by 1 second
-                countdown--;
-            }, 1000); // Update every 1000 milliseconds (1 second)
+                const tx = await ticketContract.claimTicket();
+                await tx.wait();
+                alert("Ticket claimed successfully!");
+            } catch (error) {
+                console.error("Error claiming ticket: ", error);
+            }
         }
 
-        document.getElementById("boardTrainButton").onclick = boardTrain;
+        // Board the train
+        async function boardTrain() {
+            try {
+                const isTrainAvailable = await trainContract.isTrainAvailable();
+                if (!isTrainAvailable) {
+                    alert("Train is not available right now.");
+                    return;
+                }
+
+                const tx = await trainContract.boardTrain();
+                await tx.wait();
+                alert("You have boarded the train!");
+                checkTrainStatus();
+            } catch (error) {
+                console.error("Error boarding the train: ", error);
+            }
+        }
+
+        // Initialize everything once the window loads
+        window.onload = () => {
+            if (typeof window.ethereum !== 'undefined') {
+                initContracts();
+            } else {
+                document.getElementById('message').textContent = "MetaMask is required to interact with the contracts.";
+            }
+        };
     </script>
 </body>
 </html>
