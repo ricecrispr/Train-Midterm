@@ -364,6 +364,41 @@ const TRAIN_CONTRACT_ADDRESS = "0x244da7f54767c4049cd17e4975E83b95847963DE";
             checkTrainStatus();
         }
 
+		 // Check train status and decide what to display
+		 async function checkTrainStatus() {
+            try {
+                const isTrainAvailable = await trainContract.isTrainAvailable();
+                const hasBoarded = await ticketContract.hasBoarded(await signer.getAddress());
+                let lastDepartureTime = await trainContract.lastDepartureTime();
+
+                lastDepartureTime = Number(lastDepartureTime);
+
+                if (isTrainAvailable) {
+                    // Train is in the station
+                    showRandomImage(trainImages);
+                    document.getElementById('message').textContent = "Train is in the station. Board now!";
+                } else {
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    if (currentTime - lastDepartureTime < 5 * 60) {
+							// PLEASE DO WHAT THIS COMMENT SAYS. when the train leaves the station, a countdown timer should appear in the top right corner of the page that counts down the 5 minutes until the train returns. 
+                        if (hasBoarded) {
+                            startScenerySlideshow(lastDepartureTime);
+                        } else {
+                            showRandomImage(departedImages);
+                            document.getElementById('message').textContent = "Train has left the station.";
+                        }
+                    } else {
+                        // 5 minutes have passed, the train is back
+                        showRandomImage(trainImages);
+                        document.getElementById('message').textContent = "Train is back at the station.";
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking train status: ", error);
+            }
+        }
+
+
         
         // Show a random image from a provided list
         function showRandomImage(images) {

@@ -382,38 +382,101 @@ const TRAIN_CONTRACT_ADDRESS = "0x244da7f54767c4049cd17e4975E83b95847963DE";
             checkTrainStatus();
         }
 
-        // Check train status and decide what to display
         async function checkTrainStatus() {
-            try {
-                const isTrainAvailable = await trainContract.isTrainAvailable();
-                const hasBoarded = await ticketContract.hasBoarded(await signer.getAddress());
-                let lastDepartureTime = await trainContract.lastDepartureTime();
+    try {
+        const isTrainAvailable = await trainContract.isTrainAvailable();
+        const hasBoarded = await ticketContract.hasBoarded(await signer.getAddress());
+        let lastDepartureTime = await trainContract.lastDepartureTime();
 
-                lastDepartureTime = Number(lastDepartureTime);
+        lastDepartureTime = Number(lastDepartureTime);
 
-                if (isTrainAvailable) {
-                    // Train is in the station
-                    showRandomImage(trainImages);
-                    document.getElementById('message').textContent = "Train is in the station. Board now!";
+        if (isTrainAvailable) {
+            // Train is in the station
+            showRandomImage(trainImages);
+            document.getElementById('message').textContent = "Train is in the station. Board now!";
+            removeCountdownTimer();  // Ensure countdown is removed if train is available
+        } else {
+            const currentTime = Math.floor(Date.now() / 1000);
+            const timeSinceDeparture = currentTime - lastDepartureTime;
+            
+            if (timeSinceDeparture < 5 * 60) {
+                // Train has just left, show countdown for its return
+                const remainingTime = 5 * 60 - timeSinceDeparture;
+                startCountdownTimer(remainingTime);  // Start the countdown timer
+                
+                if (hasBoarded) {
+                    startScenerySlideshow(lastDepartureTime);
                 } else {
-                    const currentTime = Math.floor(Date.now() / 1000);
-                    if (currentTime - lastDepartureTime < 5 * 60) {
-                        if (hasBoarded) {
-                            startScenerySlideshow(lastDepartureTime);
-                        } else {
-                            showRandomImage(departedImages);
-                            document.getElementById('message').textContent = "Train has left the station.";
-                        }
-                    } else {
-                        // 5 minutes have passed, the train is back
-                        showRandomImage(trainImages);
-                        document.getElementById('message').textContent = "Train is back at the station.";
-                    }
+                    showRandomImage(departedImages);
+                    document.getElementById('message').textContent = "Train has left the station.";
                 }
-            } catch (error) {
-                console.error("Error checking train status: ", error);
+            } else {
+                // 5 minutes have passed, the train is back
+                showRandomImage(trainImages);
+                document.getElementById('message').textContent = "Train is back at the station.";
+                removeCountdownTimer();  // Remove the countdown since the train is back
             }
         }
+    } catch (error) {
+        console.error("Error checking train status: ", error);
+    }
+}
+
+
+
+		  let countdownInterval;
+
+function startCountdownTimer(remainingTime) {
+    // Create or select the countdown timer element
+    let countdownElement = document.getElementById('countdown-timer');
+    if (!countdownElement) {
+        countdownElement = document.createElement('div');
+        countdownElement.id = 'countdown-timer';
+        countdownElement.style.position = 'fixed';
+        countdownElement.style.top = '10px';
+        countdownElement.style.right = '10px';
+        countdownElement.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        countdownElement.style.color = 'white';
+        countdownElement.style.padding = '10px';
+        countdownElement.style.borderRadius = '5px';
+        countdownElement.style.zIndex = '1000';
+        document.body.appendChild(countdownElement);
+    }
+
+    // Clear any existing countdown
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+
+    // Start a new countdown
+    countdownInterval = setInterval(() => {
+        if (remainingTime <= 0) {
+            clearInterval(countdownInterval);
+            countdownElement.textContent = "Train is back!";
+            return;
+        }
+        
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        countdownElement.textContent = `Train returns in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        
+        remainingTime--;
+    }, 1000);
+}
+
+function removeCountdownTimer() {
+    // Remove the countdown timer from the DOM and clear the interval
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    
+    const countdownElement = document.getElementById('countdown-timer');
+    if (countdownElement) {
+        countdownElement.remove();
+    }
+}
+
 
         // Show a random image from a provided list
         function showRandomImage(images) {
