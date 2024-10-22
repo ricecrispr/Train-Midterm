@@ -8,11 +8,11 @@
         body {
             background-size: cover;
             background-repeat: no-repeat;
-            transition: background-image 1s ease-in-out;
+            background-image: url('images/ticketbooth/scene1.png');
         }
         #message {
-            font-size: 2em;
-				color: white;
+            font-size: 4em;
+            color: white;
             text-align: center;
             margin-top: 20%;
         }
@@ -30,10 +30,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 </head>
 <body>
-    <div id="message">Loading train status...</div>
+    <div id="message">Hello. Welcome to the ticket booth :D</div>
     <div id="buttons">
         <button id="claimTicketBtn" onclick="claimTicket()">Claim Ticket</button>
-        <button id="boardTrainBtn" onclick="boardTrain()">Board Train</button>
     </div>
 
     <script>
@@ -341,34 +340,16 @@ const TRAIN_CONTRACT_ADDRESS = "0x244da7f54767c4049cd17e4975E83b95847963DE";
 ];
 
         const trainImages = [
-            'images/trainstation/TrainArrived/scene1.png',
-            'images/trainstation/TrainArrived/scene2.png',
-            'images/trainstation/TrainArrived/scene3.png',
-            'images/trainstation/TrainArrived/scene4.png'
+            'images/ticketbooth/scene1.png'
         ];
         const departedImages = [
-            'images/trainstation/TrainDeparted/scene1.png',
-            'images/trainstation/TrainDeparted/scene2.png'
+            'images/ticketbooth/scene1.png'
         ];
         const scenery1 = [
-            'images/trainbackgrounds/scenery1/scene1.png',
-            'images/trainbackgrounds/scenery1/scene2.png',
-            'images/trainbackgrounds/scenery1/scene3.png',
-            'images/trainbackgrounds/scenery1/scene4.png',
-            'images/trainbackgrounds/scenery1/scene5.png',
-            'images/trainbackgrounds/scenery1/scene6.png',
-            'images/trainbackgrounds/scenery1/scene7.png',
-            'images/trainbackgrounds/scenery1/scene8.png'
+            'images/ticketbooth/scene1.png'
         ];
         const scenery2 = [
-            'images/trainbackgrounds/scenery2/scene1.png',
-            'images/trainbackgrounds/scenery2/scene2.png',
-            'images/trainbackgrounds/scenery2/scene3.png',
-            'images/trainbackgrounds/scenery2/scene4.png',
-            'images/trainbackgrounds/scenery2/scene5.png',
-            'images/trainbackgrounds/scenery2/scene6.png',
-            'images/trainbackgrounds/scenery2/scene7.png',
-            'images/trainbackgrounds/scenery2/scene8.png'
+            'images/ticketbooth/scene1.png'
         ];
 
         let provider, signer, trainContract, ticketContract;
@@ -383,67 +364,11 @@ const TRAIN_CONTRACT_ADDRESS = "0x244da7f54767c4049cd17e4975E83b95847963DE";
             checkTrainStatus();
         }
 
-        // Check train status and decide what to display
-        async function checkTrainStatus() {
-            try {
-                const isTrainAvailable = await trainContract.isTrainAvailable();
-                const hasBoarded = await ticketContract.hasBoarded(await signer.getAddress());
-                let lastDepartureTime = await trainContract.lastDepartureTime();
-
-                lastDepartureTime = Number(lastDepartureTime);
-
-                if (isTrainAvailable) {
-                    // Train is in the station
-                    showRandomImage(trainImages);
-                    document.getElementById('message').textContent = "Train is in the station. Board now!";
-                } else {
-                    const currentTime = Math.floor(Date.now() / 1000);
-                    if (currentTime - lastDepartureTime < 5 * 60) {
-                        if (hasBoarded) {
-                            startScenerySlideshow(lastDepartureTime);
-                        } else {
-                            showRandomImage(departedImages);
-                            document.getElementById('message').textContent = "Train has left the station.";
-                        }
-                    } else {
-                        // 5 minutes have passed, the train is back
-                        showRandomImage(trainImages);
-                        document.getElementById('message').textContent = "Train is back at the station.";
-                    }
-                }
-            } catch (error) {
-                console.error("Error checking train status: ", error);
-            }
-        }
-
+        
         // Show a random image from a provided list
         function showRandomImage(images) {
             const randomIndex = Math.floor(Math.random() * images.length);
             document.body.style.backgroundImage = `url('${images[randomIndex]}')`;
-        }
-
-        // Start slideshow for scenery
-        function startScenerySlideshow(lastDepartureTime) {
-            const scenery = Math.random() > 0.5 ? scenery1 : scenery2;
-            let currentSceneIndex = 0;
-
-            function updateScenery() {
-                document.body.style.backgroundImage = `url('${scenery[currentSceneIndex]}')`;
-                currentSceneIndex = (currentSceneIndex + 1) % scenery.length;
-            }
-
-            // Calculate remaining time and set interval for slideshow
-            const currentTime = Math.floor(Date.now() / 1000);
-            const elapsedTime = currentTime - lastDepartureTime;
-            const remainingTime = Math.max(5 * 60 - elapsedTime, 0);
-
-            updateScenery();
-            setInterval(updateScenery, 10000);
-
-            setTimeout(() => {
-                document.getElementById('message').textContent = "Train has returned to the station.";
-                showRandomImage(trainImages);
-            }, remainingTime * 1000);
         }
 
         // Claim a ticket

@@ -1,0 +1,9 @@
+Error checking train status:  TypeError: Cannot mix BigInt and other types, use explicit conversions
+    at checkTrainStatus (train.html:398:37)
+
+
+
+    1. getticket (unboards the user)
+    2. use ticket (boards the user)
+    3. train leaves station (nothing happens to user, they are still boarded)
+    4. getticket (unboards the user)

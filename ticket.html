@@ -11,7 +11,9 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-image: url('images/ticketbooth/scene1.png');
+            background-size: cover;
+            background-position: center;
             flex-direction: column;
         }
         h1 {
@@ -38,7 +40,7 @@
         async function claimTicket() {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contractAddress = "0xef05673DA615ff5809E6f57AFE6eBB1A9ceDd9de";
+            const contractAddress = "0xF73d48A8601552054DF7da3738FF16fEB8701348";
             const contract = new ethers.Contract(contractAddress, [
                 // Replace with your contract's ABI
                 "function claimTicket() public"
